@@ -33,6 +33,9 @@ img {
     line-height: 20px;
     letter-spacing: 0.5px;
 }
+.navigation-link.active {
+    color: #353738;
+}
 
 button {
     cursor: pointer;

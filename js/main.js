@@ -149,6 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Рендер карточек при событии клика
 	more.addEventListener('click', (e) => {
 		e.preventDefault();
+		
 		getGoods('db/db.json').then(renderCards);
 		window.scrollTo({
 			top: 0,
@@ -179,10 +180,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	// filterCards('gender', 'Womens')
 	
+	// Функция деактивации активного класса
+	const deactiveLink = () => {
+		navigationLink.forEach(link => link.classList.remove('active'));
+	};
+
 	// Функция фильтрации элементов при событии
 	navigationLink.forEach((link) => {
 		link.addEventListener('click', (e) => {
 			e.preventDefault();
+			deactiveLink();
+
+			link.classList.add('active');
 			const field = link.dataset.field;
 			const value = link.textContent;
 			console.log(field, value);
