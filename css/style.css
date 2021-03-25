@@ -416,6 +416,19 @@ button {
     margin-bottom: 30px;
 }
 
+.modal-clear {
+    display: block;
+    padding: 5px 10px;
+    margin-bottom: 3px;
+    margin-left: auto;
+    border: none;
+    background-color: red;
+    color: #fff;
+
+    border-radius: 10px;
+
+}
+
 .cart-table {
     border-collapse: collapse;
     min-width: 540px;
@@ -517,3 +530,5 @@ button {
     }
 
 }
+
+

@@ -21,8 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	const modalCart = document.querySelector('#modal-cart');
 
 	const openModal = (e) => {
+		printQuantity();
+		cart.renderCart();
 		modalCart.classList.add('show');
-
 		document.addEventListener('keydown', escapeHandler);
 	}
 	const closeModal = () => {
@@ -52,18 +53,18 @@ document.addEventListener('DOMContentLoaded', () => {
 	*/
 
 	{
-			const scrollLinks = document.querySelectorAll('a.scroll-link');
+		const scrollLinks = document.querySelectorAll('a.scroll-link');
 
 
-			scrollLinks.forEach(link => {
-				link.addEventListener('click', (e) => {
-					e.preventDefault();
-					const id = link.getAttribute('href');
-					document.querySelector(id).scrollIntoView({
-						behavior: 'smooth',
-						block: 'start'
-					})
-				});
+		scrollLinks.forEach(link => {
+			link.addEventListener('click', (e) => {
+				e.preventDefault();
+				const id = link.getAttribute('href');
+				document.querySelector(id).scrollIntoView({
+					behavior: 'smooth',
+					block: 'start'
+				})
+			});
 		});
 		/* Перебор через for of */
 		// for(let scrollLink of scrollLinks) {
@@ -76,11 +77,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		// 		})
 		// 	});
 		// };
-		}
-		
-	
+	}
 
-	
+
+
+
 
 	/* 
 	goods
@@ -106,18 +107,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// Создание шаблона карточки
-	const createCard = (objCard) => {
+	const createCard = ({
+		id,
+		name,
+		description,
+		label,
+		img,
+		price
+	}) => {
 		const card = document.createElement('div');
 		card.className = `col-lg-3 col-sm-6`;
 		// console.log(objCard);
-		const {
-			id,
-			name,
-			description,
-			label,
-			img,
-			price
-		} = objCard;
 		card.innerHTML = `
 			<div class="goods-card">
 				${label ? `<span class="label">${label}</span>` : ''}
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Рендер карточек при событии клика
 	more.addEventListener('click', (e) => {
 		e.preventDefault();
-		
+
 		getGoods('db/db.json').then(renderCards);
 		window.scrollTo({
 			top: 0,
@@ -169,17 +169,12 @@ document.addEventListener('DOMContentLoaded', () => {
 	// Функция фильтрации элементов
 	const filterCards = (field, value) => {
 		getGoods('db/db.json')
-			.then((data) => {
-				const filteredGoods = data.filter((good) => {
-					return good[field] === value;
-				});
-				return filteredGoods;
-			})
+			.then((data) => data.filter(good => good[field] === value))
 			.then(renderCards);
-	}
+	};
 
 	// filterCards('gender', 'Womens')
-	
+
 	// Функция деактивации активного класса
 	const deactiveLink = () => {
 		navigationLink.forEach(link => link.classList.remove('active'));
@@ -195,13 +190,165 @@ document.addEventListener('DOMContentLoaded', () => {
 			const field = link.dataset.field;
 			const value = link.textContent;
 			console.log(field, value);
-			if(field) {
+			if (field) {
 				filterCards(field, value);
 			} else {
 				getGoods('db/db.json').then(renderCards);
 			}
-			
+
 		})
 	});
+
+	// Cart
+	const cartTableGoods = document.querySelector('.cart-table__goods');
+	const cardTableTotal = document.querySelector('.card-table__total');
+	const modalClear = document.querySelector('.modal-clear');
+
+	const cart = {
+		cartGoods: [
+			// {
+			// 	id: '099',
+			// 	name: 'Часы Dior',
+			// 	price: 666,
+			// 	count: 2,
+			// },
+			// {
+			// 	id: '090',
+			// 	name: 'Диски для машины',
+			// 	price: 600,
+			// 	count: 3,
+			// },
+		],
+		renderCart() {
+			cartTableGoods.textContent = '';
+			
+			this.cartGoods.forEach(({
+				id,
+				name,
+				price,
+				count
+			}) => {
+				const trGood = document.createElement('tr');
+				trGood.className = `cart-item`;
+				trGood.dataset.id = id;
+
+				trGood.innerHTML = `
+					<td>${name}</td>
+					<td>${price}</td>
+					<td><button class="cart-btn-minus">-</button></td>
+					<td>${count}</td>
+					<td><button class="cart-btn-plus">+</button></td>
+					<td>${price * count}$</td>
+					<td><button class="cart-btn-delete">x</button></td>
+				`;
+				
+				cartTableGoods.append(trGood);
+				printQuantity();
+			});
+
+			const totalPrice = this.cartGoods.reduce((acc, item) => acc + (item.price * item.count), 0);
+
+			cardTableTotal.textContent = `${totalPrice}$`;
+		},
+
+		deleteCart(id) {
+			this.cartGoods = this.cartGoods.filter(item => id !== item.id)
+			this.renderCart();
+		},
+
+		minusGood(id) {
+			for (const item of this.cartGoods) {
+				if (item.id === id) {
+					if (item.count <= 0) {
+						// this.deleteCart(id);
+						item.count == 0;
+					} else {
+						item.count--;
+					}
+					break;
+				}
+			}
+			this.renderCart();
+		},
+
+		plusGood(id) {
+			for (const item of this.cartGoods) {
+				if (item.id === id) {
+					item.count++;
+					break;
+				}
+			}
+			this.renderCart();
+		},
+
+		addCartGoods(id) {
+			// 
+			const goodItem = this.cartGoods.find(item => item.id === id);
+			if (goodItem) {
+				this.plusGood(id);
+			} else {
+				getGoods('db/db.json')
+					.then((data) => data.find(item => item.id === id))
+					.then(({id, name, price}) => {
+						this.cartGoods.push({
+							id,
+							name,
+							price,
+							count: 1
+						});
+					})
+			}
+		},
+
+		clearCart() {
+			this.renderCart();
+			cartTableGoods.textContent = '';
+		}
+	}
+
+	// Клик по кнопкам на добавление в корзину
+	document.body.addEventListener('click', e => {
+		let target = e.target;
+		const addToCart = target.closest('.add-to-cart')
+		// console.log(addToCart);
+		if (addToCart) {
+			cart.addCartGoods(addToCart.dataset.id);
+			cart.renderCart()
+			printQuantity();
+		}
+	});
+
+	cartTableGoods.addEventListener('click', (e) => {
+		let target = e.target;
+		if (target.tagName === 'BUTTON') {
+			const id = target.closest('.cart-item').dataset.id;
+
+			if (target.classList.contains('cart-btn-delete')) {
+				cart.deleteCart(id);
+			}
+			if (target.classList.contains('cart-btn-minus')) {
+				cart.minusGood(id);
+			}
+			if (target.classList.contains('cart-btn-plus')) {
+				cart.plusGood(id);
+			}
+		}
+
+	});
+
+	modalClear.addEventListener('click', () => {
+		cart.clearCart();
+	});
+
+	// Cчётчик для корзины
+	const cartCount = document.querySelector('.cart-count');
+	const printQuantity = () => {
+		let lengthItems = cartTableGoods.children.length;
+		cartCount.textContent = lengthItems;
+	}
+
+	// cart.addCartGoods('001');
+	// cart.addCartGoods('016');
+
 
 });
