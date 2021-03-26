@@ -411,9 +411,14 @@ button {
     margin-right: 30px;
     height: 40px;
     padding: 10px;
+    border: 1px solid transparent;
     border-radius: 20px;
     border-style: none;
     margin-bottom: 30px;
+}
+
+.modal-input.error {
+    border: 1px solid red
 }
 
 .modal-clear {
