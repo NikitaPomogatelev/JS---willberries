@@ -1,51 +1,49 @@
 document.addEventListener('DOMContentLoaded', () => {
-	/* 
-		Slider 
-	*/
-
+	
 	const mySwiper = new Swiper('.swiper-container', {
-		loop: true,
+        loop: true,
+    
+        // Navigation arrows
+        navigation: {
+            nextEl: '.slider-button-next',
+            prevEl: '.slider-button-prev',
+        },
+    });
 
-		// Navigation arrows
-		navigation: {
-			nextEl: '.slider-button-next',
-			prevEl: '.slider-button-prev',
-		},
-	});
+
+
 
 	/* 
 		Cart - modal
 	*/
-
 	const buttonCart = document.querySelector('.button-cart');
-	const modalCart = document.querySelector('#modal-cart');
+    const modalCart = document.querySelector('#modal-cart');
 
-	const openModal = (e) => {
-		printQuantity();
-		cart.renderCart();
-		modalCart.classList.add('show');
-		document.addEventListener('keydown', escapeHandler);
-	}
-	const closeModal = () => {
-		modalCart.classList.remove('show');
+    const openModal = (e) => {
+        cart.renderCart();
+        modalCart.classList.add('show');
+        document.addEventListener('keydown', escapeHandler);
+    }
+    const closeModal = () => {
+        modalCart.classList.remove('show');
 
-		document.removeEventListener('keydown', escapeHandler);
-	}
+        document.removeEventListener('keydown', escapeHandler);
+    }
 
-	const escapeHandler = (e) => {
-		if (e.code === 'Escape') {
-			closeModal();
-		}
-	}
+    const escapeHandler = (e) => {
+        if (e.code === 'Escape') {
+            closeModal();
+        }
+    }
 
-	buttonCart.addEventListener('click', openModal);
+    buttonCart.addEventListener('click', openModal);
 
-	modalCart.addEventListener('click', (e) => {
-		let target = e.target;
-		if (target.classList.contains('modal-close') || target == modalCart) {
-			closeModal();
-		}
-	});
+    modalCart.addEventListener('click', (e) => {
+        let target = e.target;
+        if (target.classList.contains('modal-close') || target == modalCart) {
+            closeModal();
+        }
+    });
 
 
 	/* 
@@ -80,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 
-
+	
 
 
 	/* 
@@ -203,6 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	const cartTableGoods = document.querySelector('.cart-table__goods');
 	const cardTableTotal = document.querySelector('.card-table__total');
 	const modalClear = document.querySelector('.modal-clear');
+	const cartCount = document.querySelector('.cart-count');
 
 	const cart = {
 		cartGoods: [
@@ -219,6 +218,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			// 	count: 3,
 			// },
 		],
+		countQuantity() {
+			
+			cartCount.textContent = this.cartGoods.reduce((acc, item) => {
+				return acc + item.count;
+			}, 0);
+		},
 		renderCart() {
 			cartTableGoods.textContent = '';
 			
@@ -243,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				`;
 				
 				cartTableGoods.append(trGood);
-				printQuantity();
+				
 			});
 
 			const totalPrice = this.cartGoods.reduce((acc, item) => acc + (item.price * item.count), 0);
@@ -254,6 +259,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		deleteCart(id) {
 			this.cartGoods = this.cartGoods.filter(item => id !== item.id)
 			this.renderCart();
+			this.countQuantity();
 		},
 
 		minusGood(id) {
@@ -269,6 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 			this.renderCart();
+			this.countQuantity();
 		},
 
 		plusGood(id) {
@@ -279,6 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
 				}
 			}
 			this.renderCart();
+			this.countQuantity();
 		},
 
 		addCartGoods(id) {
@@ -290,19 +298,23 @@ document.addEventListener('DOMContentLoaded', () => {
 				getGoods('db/db.json')
 					.then((data) => data.find(item => item.id === id))
 					.then(({id, name, price}) => {
+						
 						this.cartGoods.push({
 							id,
 							name,
 							price,
 							count: 1
 						});
+						this.countQuantity();
 					})
 			}
+			
 		},
 
 		clearCart() {
+			this.cartGoods.length = 0;
+			this.countQuantity();
 			this.renderCart();
-			cartTableGoods.textContent = '';
 		}
 	}
 
@@ -314,7 +326,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (addToCart) {
 			cart.addCartGoods(addToCart.dataset.id);
 			cart.renderCart()
-			printQuantity();
+			
 		}
 	});
 
@@ -337,15 +349,15 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	modalClear.addEventListener('click', () => {
-		cart.clearCart();
+		cart.clearCart.bind(cart)();
 	});
 
 	// Cчётчик для корзины
-	const cartCount = document.querySelector('.cart-count');
-	const printQuantity = () => {
-		let lengthItems = cartTableGoods.children.length;
-		cartCount.textContent = lengthItems;
-	}
+	
+	// const printQuantity = () => {
+	// 	let lengthItems = cartTableGoods.children.length;
+	// 	cartCount.textContent = lengthItems;
+	// }
 
 	// cart.addCartGoods('001');
 	// cart.addCartGoods('016');
