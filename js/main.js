@@ -1,31 +1,22 @@
+import heroSwiper from './modules/mySwiper.js';
+import cartModal from './modules/cartModal.js';
+
 document.addEventListener('DOMContentLoaded', () => {
-	
-	const mySwiper = new Swiper('.swiper-container', {
-        loop: true,
-    
-        // Navigation arrows
-        navigation: {
-            nextEl: '.slider-button-next',
-            prevEl: '.slider-button-prev',
-        },
-    });
 
-
-
-
+	heroSwiper();
 	/* 
 		Cart - modal
 	*/
 	const buttonCart = document.querySelector('.button-cart');
     const modalCart = document.querySelector('#modal-cart');
 
-    const openModal = (e) => {
-        cart.renderCart();
-        modalCart.classList.add('show');
-        document.addEventListener('keydown', escapeHandler);
-    }
-    const closeModal = () => {
-        modalCart.classList.remove('show');
+	const openModal = (e) => {
+		cart.renderCart();
+		modalCart.classList.add('show');
+		document.addEventListener('keydown', escapeHandler);
+	}
+	const closeModal = () => {
+		modalCart.classList.remove('show');
 
         document.removeEventListener('keydown', escapeHandler);
     }
@@ -219,14 +210,13 @@ document.addEventListener('DOMContentLoaded', () => {
 			// },
 		],
 		countQuantity() {
-			
 			cartCount.textContent = this.cartGoods.reduce((acc, item) => {
 				return acc + item.count;
 			}, 0);
 		},
 		renderCart() {
 			cartTableGoods.textContent = '';
-			
+
 			this.cartGoods.forEach(({
 				id,
 				name,
@@ -246,9 +236,8 @@ document.addEventListener('DOMContentLoaded', () => {
 					<td>${price * count}$</td>
 					<td><button class="cart-btn-delete">x</button></td>
 				`;
-				
+
 				cartTableGoods.append(trGood);
-				
 			});
 
 			const totalPrice = this.cartGoods.reduce((acc, item) => acc + (item.price * item.count), 0);
@@ -297,8 +286,12 @@ document.addEventListener('DOMContentLoaded', () => {
 			} else {
 				getGoods('db/db.json')
 					.then((data) => data.find(item => item.id === id))
-					.then(({id, name, price}) => {
-						
+					.then(({
+						id,
+						name,
+						price
+					}) => {
+
 						this.cartGoods.push({
 							id,
 							name,
@@ -308,7 +301,6 @@ document.addEventListener('DOMContentLoaded', () => {
 						this.countQuantity();
 					})
 			}
-			
 		},
 
 		clearCart() {
@@ -326,7 +318,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		if (addToCart) {
 			cart.addCartGoods(addToCart.dataset.id);
 			cart.renderCart()
-			
 		}
 	});
 
@@ -353,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	});
 
 	// Cчётчик для корзины
-	
 	// const printQuantity = () => {
 	// 	let lengthItems = cartTableGoods.children.length;
 	// 	cartCount.textContent = lengthItems;
@@ -363,4 +353,92 @@ document.addEventListener('DOMContentLoaded', () => {
 	// cart.addCartGoods('016');
 
 
+
+	// Отправка данных на сервер
+	const modalForm = document.querySelector('.modal-form');
+	const modalInputs = document.querySelectorAll('.modal-input');
+
+
+
+
+
+	const postData = dataUser => fetch('server.php', {
+		method: 'POST',
+		body: dataUser,
+	});
+
+	// postData('hello');
+
+
+
+	// Отправка формы
+	const sendForm = () => {
+		formData.append('Заказ', JSON.stringify(cart.cartGoods));
+
+		// console.log(JSON.stringify(formData));
+
+		postData(formData)
+			.then(res => {
+				if (!res.ok) {
+					throw new Error(`Возникла ошибка по адресу: ${res.url} Статус ошибки: ${res.status}`);
+				}
+				alert('Ваш заказ успешно отправлен, с вами свяжутся в ближайшее время');
+				console.log(res.statusText);
+			})
+			.catch(err => {
+				alert('К сожалению произошла ошибка, повторите попытку похже');
+				console.error(err);
+			})
+			.finally(() => {
+				closeModal();
+				modalForm.reset();
+				// cart.cartGoods.length = 0;
+				cart.clearCart();
+			});
+
+	}
+	// Валидация и отправка формы
+	const sendValidForm = () => {
+		// Карта валидации
+		let patterns = {
+			nameCustomer: /.+/,
+			phoneCustomer: /^\d{7,14}$/,
+		};
+		modalForm.addEventListener('submit', (e) => {
+
+			let err = false;
+
+			// Валидация полей
+			modalInputs.forEach(input => {
+				console.log(input.value);
+				input.value = input.value.trim();
+				let pattern = patterns[input.name];
+
+				if (!pattern.test(input.value)) {
+					input.classList.add('error');
+					err = true;
+
+				} else {
+					sendForm();
+				}
+			});
+			if (err) {
+				e.preventDefault();
+				alert('Заполните все поля!')
+			}
+
+		});
+		modalForm.addEventListener('focusin', (e) => {
+			let target = e.target;
+			console.log(target);
+			if(target.classList.contains('modal-input')) {
+				target.classList.remove('error');
+			}
+			
+		});
+
+	
+	}
+
+	sendValidForm();
 });
